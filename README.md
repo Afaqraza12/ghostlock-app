@@ -16,6 +16,49 @@ If Shizuku is enabled, start it with ADB before running GhostLock. Tap GhostLock
 
 Any root manager that ships `libksud.so` provides `ksud` for module loading. The built-in list (KernelSU, SukiSU Ultra, ReSukiSU, BakaSU, KowSU) is auto-detected, and other managers can be picked in **Settings → Root manager**. Without `ksud`, W1/W2 still grant uid 0 but no module is loaded.
 
+---
+
+## 📱 Sony Xperia 5 III (SOG05 / pdx214) — one-click root build
+
+This fork adds a kernel profile so the **SOG05 (XQ-BQ42 / SO-53B / pdx214)** running
+stock Android 13 (`61.2.D.0.153`) can be rooted with a single tap — no PC, no scripts.
+
+| | |
+| :--- | :--- |
+| Kernel | `5.4.210-qgki-g55a0c74ba38a` |
+| Profile | [`5.4.210-qgki-g55a0c74ba38a.conf`](app/src/main/assets/kernel_profiles/5.4.210-qgki-g55a0c74ba38a.conf) |
+| Route | `select_stack` (pselect), `waiter_shift = -2` — the route proven on this device |
+| Root | KernelSU-Next LKM (`kernelsu.ko`) loaded by `ksud` from your manager app |
+| Managers | ReSukiSU / BakaSU, KernelSU, SukiSU Ultra |
+
+### Install
+
+1. Download the APK from the **[latest `sog05-latest` release](../../releases/tag/sog05-latest)**
+   (or the `ghostlock-sog05-debug` artifact of the newest Actions run).
+2. Install a root manager: **[ReSukiSU / BakaSU](https://github.com/resukisu/resukisu)**.
+3. Open GhostLock → status card should show the SOG05 kernel as supported → tap **Run**.
+4. Optional: enable **Run via Shizuku** to skip the seccomp-bypass stage (faster, more reliable).
+
+### Notes
+
+- **Temporary root**: a reboot clears it. Re-run the app (one tap) to root again.
+- Mortal-engineer detail: the offsets are `_text`-relative and were verified against the live
+  `/proc/kallsyms` of a rooted SOG05 (`_text = 0xffffffeead480000` boot). Symbol offsets are
+  stable across KASLR slides; the app re-leaks the slide at runtime.
+- Fields `pid / tgid / tasks / atomic_flags / seccomp / sched_task_group` in the profile were
+  seeded from the arm64 5.4 layout and are flagged for field-testing refinement — if the app
+  rejects the profile or W1/W2 fail, open an issue with `adb shell dmesg | tail -40` output.
+
+### Credits
+
+- **Upstream project**: [YuKongA/ghostlock-app](https://github.com/YuKongA/ghostlock-app) (MIT) — CVE-2026-43499 exploit + app.
+- **SOG05 kernel profile**: ported from the open-source SOG05 exploit work by
+  [Afaqraza12](https://github.com/Afaqraza12) (`ghostlock_5.4_xperia`): proven `pselect` route,
+  `task_struct`/`cred`/`offset` geometry, live-kallsyms verification.
+- KernelSU-Next, ReSukiSU / BakaSU, SukiSU Ultra — respective authors.
+
+---
+
 ## Add a kernel profile
 
 You can import a profile without rebuilding the app:
